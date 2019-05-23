@@ -15,6 +15,13 @@ void loop() {
     uint8_t red, green, blue;
     CircuitPlayground.senseColor(red, green, blue);
 
+    for (auto color : colors) {
+        if (std::make_tuple(red, green, blue) == color) {
+            // match found
+            // TODO: add code to open the lid.
+        }
+    }
+
     bool left_first = CircuitPlayground.leftButton();
     bool right_first = CircuitPlayground.rightButton();
     delay(20);
