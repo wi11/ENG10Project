@@ -3,20 +3,13 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <SPI.h>
+#include <math.h>
 
-// Pick analog outputs, for the UNO these three work well
-// use ~560  ohm resistor between Red & Blue, ~1K for green (its brighter)
-#define redpin 3
-#define greenpin 5
-#define bluepin 6
 // for a common anode LED, connect the common pin to +5V
 // for common cathode, connect the common to ground
 
 // set to false if using a common cathode LED
 #define commonAnode true
-
-// our RGB -> eye-recognized gamma color
-byte gammatable[256];
 
 int servoPin = 9;
 Servo servo;
@@ -29,6 +22,8 @@ int numColors = 0;
 void setup() {
     Serial.begin(115200);
     CircuitPlayground.begin();
+    while(!Serial);
+    Serial.println("Hello");
     if (tcs.begin()) {
         Serial.println("Found sensor");
     } else {
@@ -36,6 +31,7 @@ void setup() {
         while (1); // halt!
     }
     servo.attach(servoPin);
+    servo.write(0);
 
     for (int row = 0; row < 10; row++) {
         for (int col = 0; col < 3; col++) {
@@ -52,17 +48,22 @@ void loop() {
     tcs.getRGB(&red, &green, &blue);
     tcs.setInterrupt(true);
 
+    /*Serial.print("R:\t"); Serial.print(int(red)); 
+    Serial.print("\tG:\t"); Serial.print(int(green)); 
+    Serial.print("\tB:\t"); Serial.print(int(blue));
+    Serial.print("\n");*/
+    
     for (int row = 0; row < 10; row++) {
-        if (colors[row][0] == red && colors[row][1] == blue && colors[row][2] == green) {
-            servo.write(90);
-            delay(60000);
+        if (fabs(colors[row][0] - red) < 20 && fabs(colors[row][1] - green) < 20 && fabs(colors[row][2] - blue) < 20) {
+            servo.write(180);
+            delay(10000);
             servo.write(0);
         }
     }
 
     bool left_first = CircuitPlayground.leftButton();
     bool right_first = CircuitPlayground.rightButton();
-    delay(20);
+    delay(100);
     bool left_second = CircuitPlayground.leftButton();
     bool right_second = CircuitPlayground.rightButton();
 
@@ -75,8 +76,26 @@ void loop() {
         tcs.getRGB(&collarRed, &collarGreen, &collarBlue);
         tcs.setInterrupt(true);
         colors[numColors][0] = collarRed;
-        colors[numColors][1] = collarBlue;
-        colors[numColors][2] = collarGreen;
+        colors[numColors][1] = collarGreen;
+        colors[numColors][2] = collarBlue;
+        Serial.println("Added color");
+
+        uint8_t rG = CircuitPlayground.gamma8(collarRed);
+        uint8_t gG = CircuitPlayground.gamma8(collarGreen);
+        uint8_t bG = CircuitPlayground.gamma8(collarBlue);
+        
+        
+        for (int i = 0; i < 10; ++i) {
+          CircuitPlayground.strip.setPixelColor(i, rG, gG, bG);
+          String pixel = "Pixel ";
+          String setTo = " set to ";
+          String comma = ", ";
+          String printStr = pixel + i + setTo + rG + comma + gG + comma + bG;
+          Serial.println(printStr);
+        }
+        CircuitPlayground.strip.show();
         numColors++;
+        delay(2000);
+        CircuitPlayground.clearPixels();
     }
 }
