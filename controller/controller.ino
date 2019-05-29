@@ -63,7 +63,7 @@ void loop() {
 
     bool left_first = CircuitPlayground.leftButton();
     bool right_first = CircuitPlayground.rightButton();
-    delay(100);
+    delay(20);
     bool left_second = CircuitPlayground.leftButton();
     bool right_second = CircuitPlayground.rightButton();
 
@@ -87,15 +87,11 @@ void loop() {
         
         for (int i = 0; i < 10; ++i) {
           CircuitPlayground.strip.setPixelColor(i, rG, gG, bG);
-          String pixel = "Pixel ";
-          String setTo = " set to ";
-          String comma = ", ";
-          String printStr = pixel + i + setTo + rG + comma + gG + comma + bG;
-          Serial.println(printStr);
         }
         CircuitPlayground.strip.show();
         numColors++;
         delay(2000);
         CircuitPlayground.clearPixels();
+
     }
 }
